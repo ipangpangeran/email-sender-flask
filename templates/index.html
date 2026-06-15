@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Sender</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        background: '#0B0D14',
+                        card: '#131620',
+                        borderColor: '#1F2433',
+                        inputBg: '#0B0D14',
+                        primary: '#6366F1',
+                        primaryHover: '#4F46E5',
+                        successBg: '#052e16',
+                        successBorder: '#14532d',
+                        successText: '#4ade80'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar for Textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #0B0D14; 
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #1F2433; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #333A4D; 
+        }
+    </style>
+</head>
+<body class="bg-background text-slate-300 font-sans min-h-screen flex flex-col">
+
+    <header class="border-b border-borderColor py-4 px-6 md:px-12 flex justify-between items-center bg-background/80 backdrop-blur sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-primary/20 p-2 rounded-lg text-primary">
+                <i data-lucide="send" class="w-6 h-6 transform -rotate-45"></i>
+            </div>
+            <div>
+                <h1 class="text-white font-bold text-lg">Email Sender</h1>
+                <p class="text-slate-500 text-sm">Kirim email menggunakan Resend API</p>
+            </div>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 bg-card border border-borderColor py-2 px-4 rounded-lg text-sm text-slate-400">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+            <span>mail@ipangpangeran.com</span>
+        </div>
+    </header>
+
+    <main class="flex-1 p-6 md:px-12 py-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 space-y-6 relative">
+            
+            <div id="loadingOverlay" class="hidden absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-2xl">
+                <div class="bg-card border border-borderColor p-8 rounded-2xl flex flex-col items-center shadow-2xl">
+                    <div class="w-12 h-12 border-4 border-slate-700 border-t-primary rounded-full animate-spin mb-4"></div>
+                    <h3 class="text-white font-semibold text-lg">Mengirim email...</h3>
+                    <p class="text-slate-400 text-sm mt-1">Mohon tunggu sebentar</p>
+                </div>
+            </div>
+
+            <div class="bg-card border border-borderColor rounded-2xl p-6 md:p-8">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="bg-slate-800/50 p-3 rounded-xl border border-borderColor">
+                        <i data-lucide="mail-plus" class="w-6 h-6 text-primary"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-white font-semibold text-lg">Kirim Email</h2>
+                        <p class="text-slate-400 text-sm">Isi form di bawah ini untuk mengirim email.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Email Tujuan</label>
+                        <div class="relative">
+                            <i data-lucide="user" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+                            <input type="email" id="to" placeholder="ilman.pangeran@bni.co.id" class="w-full bg-inputBg border border-borderColor rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Masukkan alamat email penerima</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Subject</label>
+                        <div class="relative">
+                            <i data-lucide="type" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+                            <input type="text" id="subject" placeholder="Test Email" class="w-full bg-inputBg border border-borderColor rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Masukkan subject email</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Pesan</label>
+                        <textarea id="message" rows="6" placeholder="Halo ini test email pake Sender" class="w-full bg-inputBg border border-borderColor rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono text-sm"></textarea>
+                        <p class="text-xs text-slate-500 mt-2">Tulis isi pesan email Anda</p>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-2">
+                        <button onclick="handleSendEmail()" class="bg-gradient-to-r from-primary to-purple-600 hover:from-primaryHover hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-primary/20">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            Kirim Email
+                        </button>
+                        <button onclick="resetForm()" class="bg-inputBg border border-borderColor hover:bg-slate-800 text-slate-300 py-3 px-4 rounded-lg transition-all">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="successNotification" class="hidden bg-successBg border border-successBorder rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="bg-green-500 text-white rounded-full p-1">
+                        <i data-lucide="check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-successText font-medium">Email berhasil dikirim!</h4>
+                        <p class="text-slate-300 text-sm mt-1">Email telah berhasil dikirim ke <span id="sentEmailDisplay" class="font-medium text-white"></span></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                    <span id="timestampDisplay" class="text-xs text-slate-400"></span>
+                    <button class="bg-black/20 border border-successBorder hover:bg-black/40 text-slate-300 text-xs py-2 px-3 rounded-lg flex items-center gap-1 transition-all">
+                        Lihat Detail <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="result" class="hidden text-xs bg-slate-900 p-4 rounded-lg overflow-auto border border-borderColor text-slate-400"></div>
+
+        </div>
+
+        <div class="space-y-6">
+            
+            <div class="bg-card border border-borderColor rounded-2xl p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <i data-lucide="info" class="w-5 h-5 text-slate-400"></i>
+                    <h3 class="text-white font-medium text-lg">Informasi</h3>
+                </div>
+                <p class="text-sm text-slate-400 mb-6">Gunakan form ini untuk mengirim email melalui <span class="text-white font-medium">Resend API.</span></p>
+                
+                <div class="space-y-4">
+                    <div class="bg-inputBg border border-borderColor p-4 rounded-xl flex items-start gap-4">
+                        <div class="bg-slate-800 p-2 rounded-lg text-primary">
+                            <i data-lucide="lock" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white text-sm font-medium">Aman</h4>
+                            <p class="text-xs text-slate-500 mt-1">API Key disimpan di server, tidak terlihat di client.</p>
+                        </div>
+                    </div>
+                    <div class="bg-inputBg border border-borderColor p-4 rounded-xl flex items-start gap-4">
+                        <div class="bg-slate-800 p-2 rounded-lg text-primary">
+                            <i data-lucide="zap" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white text-sm font-medium">Cepat</h4>
+                            <p class="text-xs text-slate-500 mt-1">Email terkirim dalam hitungan detik.</p>
+                        </div>
+                    </div>
+                    <div class="bg-inputBg border border-borderColor p-4 rounded-xl flex items-start gap-4">
+                        <div class="bg-slate-800 p-2 rounded-lg text-primary">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white text-sm font-medium">Reliabel</h4>
+                            <p class="text-xs text-slate-500 mt-1">Menggunakan Infrastruktur Resend.</p>
+                        </div>
+                    </div>
+                    <div class="bg-inputBg border border-borderColor p-4 rounded-xl flex items-start gap-4">
+                        <div class="bg-slate-800 p-2 rounded-lg text-primary">
+                            <i data-lucide="smile" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white text-sm font-medium">Mudah Digunakan</h4>
+                            <p class="text-xs text-slate-500 mt-1">Interface sederhana dan responsif.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card border border-borderColor rounded-2xl p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <i data-lucide="lightbulb" class="w-5 h-5 text-slate-400"></i>
+                    <h3 class="text-white font-medium text-lg">Tips</h3>
+                </div>
+                <ul class="space-y-3 text-sm text-slate-400 list-disc list-inside marker:text-slate-600">
+                    <li>Pastikan email tujuan valid</li>
+                    <li>Subject yang jelas meningkatkan kemungkinan dibaca</li>
+                    <li>Hindari penggunaan spam words</li>
+                    <li>Gunakan nama pengirim yang profesional</li>
+                </ul>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="border-t border-borderColor py-6 px-6 md:px-12 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 mt-auto">
+        <div>
+            &copy; 2026 Email Sender &bull; Powered by <span class="text-primary hover:underline cursor-pointer">Resend</span>
+        </div>
+        <div class="flex items-center gap-1">
+            Made with <i data-lucide="heart" class="w-3 h-3 text-red-500 fill-red-500"></i> by Ipang
+        </div>
+    </footer>
+
+    <script>
+        // Inisialisasi Lucide Icons
+        lucide.createIcons();
+
+        // Fungsi Reset Form
+        function resetForm() {
+            document.getElementById('to').value = '';
+            document.getElementById('subject').value = '';
+            document.getElementById('message').value = '';
+            document.getElementById('successNotification').classList.add('hidden');
+        }
+
+        // Fungsi Format Tanggal untuk Notifikasi
+        function getCurrentDateTime() {
+            const now = new Date();
+            const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            return now.toLocaleDateString('id-ID', options).replace(/\./g, ':');
+        }
+
+        // Fungsi Kirim Email (Adaptasi dari kode asli Anda)
+        async function handleSendEmail() {
+            const toEmail = document.getElementById('to').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+
+            // Validasi Sederhana
+            if(!toEmail || !subject || !message) {
+                alert('Mohon isi semua kolom!');
+                return;
+            }
+
+            // Tampilkan Loading
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('successNotification').classList.add('hidden');
+
+            const payload = {
+                to: toEmail,
+                subject: subject,
+                message: message
+            };
+
+            try {
+                /* --- KODE ASLI ANDA --- */
+                const response = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                /* ---------------------- */
+
+                // Simulasi Jeda Network agar loading terlihat (Hapus setTimeout ini jika pakai API asli)
+                // await new Promise(resolve => setTimeout(resolve, 1500)); 
+                // const result = { status: "success", id: "evt_12345" }; // Mock response
+
+                // Sembunyikan Loading
+                document.getElementById('loadingOverlay').classList.add('hidden');
+
+                // Update UI Success Notification
+                document.getElementById('sentEmailDisplay').textContent = toEmail;
+                document.getElementById('timestampDisplay').textContent = getCurrentDateTime();
+                document.getElementById('successNotification').classList.remove('hidden');
+
+                // Tetap simpan raw result ke div seperti kode asli Anda
+                document.getElementById('result').innerHTML = JSON.stringify(result, null, 2);
+
+            } catch (error) {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                alert('Gagal mengirim email. Periksa console untuk detail.');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
